@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "@types/mime-types": "^2.1.0",
-    "@types/node": "^7.0.64",
+    "@types/node": "^7.10.5",
     "@types/request": "0.0.44",
     "request": "^2.85.0",
     "safe-regex": "^1.1.0",

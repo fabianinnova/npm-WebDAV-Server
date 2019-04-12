@@ -50,7 +50,7 @@ function Not(filter)
 
 function parseInternal(group : string)
 {
-    const rex = /((not)|\[([^\]]+)\]|<(DAV:no-lock)>|<([^>]+)>|([^\s]+))/ig;
+    const rex = /((not)|<*([^>]+)>*|\[([^\]]+)\]|<(DAV:no-lock)>)/ig;
     let match = rex.exec(group);
 
     let isNot = false;
@@ -111,11 +111,11 @@ function parseInternal(group : string)
 
 export function extractOneToken(ifHeader : string)
 {
-    const match = /^[ ]*\([ ]*<([^>]+)>[ ]*\)[ ]*$/.exec(ifHeader);
+    const match = /(?:<([^>]+)>)?\s*\(([^\)]+)\)/.exec(ifHeader);
     if(!match)
         return null;
     else
-        return match[1];
+        return match[2];
 }
 
 export function parseIfHeader(ifHeader : string)
