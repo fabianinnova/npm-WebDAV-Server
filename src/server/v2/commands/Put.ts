@@ -43,7 +43,18 @@ export default class implements HTTPMethod
                                 return callback();
                             }
 
-                            inputStream.pipe(wStream);
+                            inputStream.on('end', () => {
+                                //Write something otherwise the HttpFileSystem doesn't work.
+                                wStream.write('end');                            
+                            });                            
+                            wStream.on('close', () => {
+                                if(created)
+                                    ctx.setCode(HTTPCodes.Created);
+                                else
+                                    ctx.setCode(HTTPCodes.OK);
+                                    
+                                callback();
+                            });
                             wStream.on('finish', (e) => {
                                 if(created)
                                     ctx.setCode(HTTPCodes.Created);
@@ -57,6 +68,7 @@ export default class implements HTTPMethod
                                     ctx.setCode(HTTPCodes.InternalServerError)
                                 callback();
                             });
+                            inputStream.pipe(wStream);
                         })
                     }))
                 //})
