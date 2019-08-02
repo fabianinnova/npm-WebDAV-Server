@@ -97,10 +97,17 @@ export function start(port ?: number | WebDAVServerStartCallback, callback ?: We
         this.autoSave();
     }
 
+    this.server.listen(() => {
+        if(_callback)
+            _callback(this.server);
+    });
+
+    /*
     this.server.listen(_port, this.options.hostname, () => {
         if(_callback)
             _callback(this.server);
     });
+    */
 }
 
 export function stop(callback : () => void)
