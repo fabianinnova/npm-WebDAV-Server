@@ -13,14 +13,14 @@ export class HTTPDigestAuthentication implements HTTPAuthentication
 
     generateNonce() : string
     {
-        const buffer = new Buffer(this.nonceSize);
+        const buffer = Buffer.alloc(this.nonceSize);
         for(let i = 0; i < buffer.length; ++i)
             buffer[i] = Math.floor(Math.random() * 256);
 
         return md5(buffer);
     }
 
-    askForAuthentication()
+    askForAuthentication(ctx : HTTPRequestContext)
     {
         return {
             'WWW-Authenticate': `Digest realm="${this.realm}", qop="auth", nonce="${this.generateNonce()}", opaque="${this.generateNonce()}"`

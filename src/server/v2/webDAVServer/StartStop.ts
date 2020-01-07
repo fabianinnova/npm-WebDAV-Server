@@ -38,15 +38,15 @@ export function executeRequest(req : http.IncomingMessage, res : http.ServerResp
 
             if(base.headers.contentLength <= 0)
             {
-                go(new Buffer(0));
+                go(Buffer.alloc(0));
             }
             else
             {
-                const data = new Buffer(base.headers.contentLength);
+                const data = Buffer.alloc(base.headers.contentLength);
                 let index = 0;
                 req.on('data', (chunk) => {
                     if(chunk.constructor === String)
-                        chunk = new Buffer(chunk as string);
+                        chunk = Buffer.from(chunk as string);
                     
                     for(let i = 0; i < chunk.length && index < data.length; ++i, ++index)
                         data[index] = (chunk as Buffer)[i];
@@ -70,24 +70,15 @@ export function start(port ?: number | WebDAVServerStartCallback, callback ?: We
     let _port : number = this.options.port;
     let _callback : WebDAVServerStartCallback;
 
-    if(port && port.constructor === Number)
-    {
-        _port = port as number;
-        if(callback)
-        {
-            if(callback instanceof Function)
-                _callback = callback;
-            else
-                throw Errors.IllegalArguments;
-        }
-    }
-    else if(port && port.constructor === Function)
-    {
-        _port = this.options.port;
-        _callback = port as WebDAVServerStartCallback;
-        if(callback)
-            throw Errors.IllegalArguments;
-    }
+    if(port && typeof port === 'number')
+        _port = port;
+    else if(callback && typeof callback === 'number')
+        _port = callback;
+
+    if(port && typeof port === 'function')
+        _callback = port;
+    else if(callback && typeof callback === 'function')
+        _callback = callback;
 
     if(!this.server)
     {

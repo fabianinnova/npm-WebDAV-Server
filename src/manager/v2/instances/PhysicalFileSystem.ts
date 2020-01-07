@@ -125,7 +125,7 @@ export class PhysicalFileSystem extends FileSystem
         {
             if(!fs.constants || !fs.constants.O_CREAT)
             { // node v5.* and lower
-                fs.writeFile(realPath, new Buffer(0), callback);
+                fs.writeFile(realPath, Buffer.alloc(0), callback);
             }
             else
             { // node v6.* and higher
@@ -317,9 +317,6 @@ export class PhysicalFileSystem extends FileSystem
     protected _type(path : Path, ctx : TypeInfo, callback : ReturnCallback<ResourceType>) : void
     {
         const { realPath } = this.getRealPath(path);
-
-        if(realPath.indexOf('.url') !== -1)
-            return callback(Errors.ResourceNotFound);
 
         fs.stat(realPath, (e, stat) => {
             if(e)

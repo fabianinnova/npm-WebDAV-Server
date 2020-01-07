@@ -52,7 +52,7 @@ export class VirtualFileSystemResource
 
         this.lastModifiedDate = rs.lastModifiedDate ? rs.lastModifiedDate : Date.now();
         this.creationDate = rs.creationDate ? rs.creationDate : Date.now();
-        this.content = rs.content ? rs.content.map((o) => new Buffer(o)) : [];
+        this.content = rs.content ? rs.content.map((o) => Buffer.from(o)) : [];
         this.props = new LocalPropertyManager(rs.props);
         this.locks = new LocalLockManager();
         this.size = rs.size ? rs.size : 0;
@@ -69,7 +69,7 @@ export class VirtualFileReadable extends Readable
 {
     blockIndex : number
 
-    constructor(public contents : Int8Array[])
+    constructor(public contents : any[][] | Buffer[] | Int8Array[])
     {
         super();
 
@@ -96,7 +96,7 @@ export class VirtualFileReadable extends Readable
 
 export class VirtualFileWritable extends Writable
 {
-    constructor(public contents : Int8Array[])
+    constructor(public contents : any[][] | Buffer[] | Int8Array[])
     {
         super(null);
     }

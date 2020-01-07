@@ -26,12 +26,12 @@ class RangedStream extends Transform
                 callback(null, chunk);
             }
             else
-                callback(null, new Buffer(0));
+                callback(null, Buffer.alloc(0));
         }
         else if(this.nb > this.max)
         {
             this.nb += chunk.length;
-            callback(null, new Buffer(0));
+            callback(null, Buffer.alloc(0));
         }
         else
         {
@@ -66,7 +66,7 @@ class MultipleRangedStream extends Transform
             streamRange.stream.write(chunk, encoding);
         });
 
-        callback(null, new Buffer(0));
+        callback(null, Buffer.alloc(0));
     }
 
     end(chunk ?: any, encoding?: any, cb?: Function): void
@@ -197,6 +197,12 @@ export default class implements HTTPMethod
                                             return callback();
                                         }
                                         //ctx.invokeEvent('read', r);
+
+                                        rstream.on('error', (e) => {
+                                            if(!ctx.setCodeFromError(e))
+                                                ctx.setCode(HTTPCodes.InternalServerError);
+                                            return callback();
+                                        })
 
                                         if(range)
                                         {

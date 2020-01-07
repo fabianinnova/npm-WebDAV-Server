@@ -10,6 +10,7 @@ import { Errors } from '../../Errors'
 import { IUser } from '../../user/v2/IUser'
 import * as http from 'http'
 import * as url from 'url'
+import { promisifyCall } from '../../helper/v2/promise'
 
 export class RequestContextHeaders
 {
@@ -140,11 +141,18 @@ export class RequestContext
         }
     }
     
+    getResourceAsync() : Promise<Resource>
+    getResourceAsync(path : Path | string) : Promise<Resource>
+    getResourceAsync(path ?: Path | string) : Promise<Resource>
+    {
+        return promisifyCall((cb) => this.getResource(path, cb));
+    }
+
     getResource(callback : ReturnCallback<Resource>) : void
     getResource(path : Path | string, callback : ReturnCallback<Resource>) : void
     getResource(_path : Path | string | ReturnCallback<Resource>, _callback ?: ReturnCallback<Resource>) : void
     {
-        const path = _callback ? new Path(_path as Path | string) : this.requested.path;
+        const path = Path.isPath(_path) ? new Path(_path as Path | string) : this.requested.path;
         const callback = _callback ? _callback : _path as ReturnCallback<Resource>;
 
         this.server.getResource(this, path, callback);
@@ -162,7 +170,7 @@ export class RequestContext
             uri = this.requested.uri;
 
         if(this.server.options.respondWithPaths)
-            return uri;
+            return this.rootPath ? this.rootPath + uri : uri;
         else
             return (this.prefixUri() + uri).replace(/([^:])\/\//g, '$1/');
     }
@@ -225,6 +233,13 @@ export class HTTPRequestContext extends RequestContext
         this.response = response;
         this.request = request;
         this.exit = exit;
+        
+        if(this.response)
+        {
+            this.response.on('error', (e) => {
+                console.error(e);
+            });
+        }
     }
 
     static create(server : WebDAVServer, request : http.IncomingMessage, response : http.ServerResponse, callback : (error : Error, ctx : HTTPRequestContext) => void) : void
@@ -241,6 +256,12 @@ export class HTTPRequestContext extends RequestContext
         response.setHeader('Access-Control-Expose-Headers', 'DAV, content-length, Allow');
         response.setHeader('MS-Author-Via', 'DAV');
         response.setHeader('Server', server.options.serverName + '/' + server.options.version);
+
+        if(server.options.headers)
+        {
+            for(const headerName in server.options.headers)
+                response.setHeader(headerName, server.options.headers[headerName]);
+        }
         
         const setAllowHeader = (type ?: ResourceType) =>
         {
@@ -348,7 +369,7 @@ export class HTTPRequestContext extends RequestContext
             return;
         }
 
-        const auth = this.server.httpAuthentication.askForAuthentication();
+        const auth = this.server.httpAuthentication.askForAuthentication(this);
         for(const name in auth)
             this.response.setHeader(name, auth[name]);
         callback(null);
@@ -363,14 +384,14 @@ export class HTTPRequestContext extends RequestContext
             default:
             case 'xml':
                 this.response.setHeader('Content-Type', 'application/xml;charset=utf-8');
-                this.response.setHeader('Content-Length', new Buffer(content).length.toString());
+                this.response.setHeader('Content-Length', Buffer.from(content).length.toString());
                 this.response.write(content, 'UTF-8');
                 break;
                 
             case 'json':
                 content = XML.toJSON(content);
                 this.response.setHeader('Content-Type', 'application/json;charset=utf-8');
-                this.response.setHeader('Content-Length', new Buffer(content).length.toString());
+                this.response.setHeader('Content-Length', Buffer.from(content).length.toString());
                 this.response.write(content, 'UTF-8');
                 break;
         }

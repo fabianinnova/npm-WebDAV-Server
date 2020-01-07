@@ -56,7 +56,7 @@ function parseRequestBody(ctx : HTTPRequestContext, data : Buffer) : PropertyRul
 
     try
     {
-        const xml = XML.parse(data);
+        const xml = XML.parse(data as any);
 
         const propfind = xml.find('DAV:propfind');
 
@@ -100,7 +100,7 @@ export default class implements HTTPMethod
 
         const response = new XMLElementBuilder('D:response');
         const callback = (e ?: Error) => {
-            if(e === Errors.MustIgnore)
+            if(e === Errors.MustIgnore || e === Errors.ResourceNotFound)
                 e = null;
             else if(!e)
                 multistatus.add(response);
@@ -289,7 +289,7 @@ export default class implements HTTPMethod
             
             methodDisplayName.bind(resource)((e, name) => process.nextTick(() => {
                 if(!e)
-                    tags.displayname.el.add(name ? encodeURI(name) : '');
+                    tags.displayname.el.add(name || '');
                 nbOut(e);
             }))
         })
